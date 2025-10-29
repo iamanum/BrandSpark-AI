@@ -1,14 +1,15 @@
-// app/api/generate/route.ts - MOCK VERSION (Bina Billing Ke)
+// app/api/generate/route.ts - FINAL MOCK VERSION
 
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-// NOTE: Humne 'openai' import ko hata diya hai
+
+// NOTE: Humne 'openai' import ko hata diya hai kyunki hum Mock data use kar rahe hain
 
 // Yahan woh sample data hai jo user ko nazar aayega
 const MOCK_AI_RESPONSE = (company: string, product: string, audience: string) => `
-**🎉 Post 1: Energy Boost!**
+**🎉 Post 1: Fueling ${audience} with ${company}**
 
-Need a study break or a professional start? ${company} has the perfect freshly brewed coffee waiting. Fuel your focus and grab a bakery item!
+Need a study break or a professional start? ${company} knows ${audience} need premium fuel. Our coffee is waiting! Fuel your focus and grab a bakery item!
 
 #${company.replace(/\s/g, '')} #StudentFuel #ProfessionalVibes
 
@@ -35,8 +36,17 @@ export async function POST(request: Request) {
     try {
         const { userId, contentType } = await request.json();
 
+        if (!userId || !contentType) {
+            return new Response(JSON.stringify({ error: 'Missing user or content type' }), { status: 400 });
+        }
+        
+        // 🚨 FINAL FIX: Check karein ke DB object available hai
+        if (!db) {
+            return new Response(JSON.stringify({ error: 'Database service is unavailable.' }), { status: 503 });
+        }
+
         // 1. User ki Company Profile Firestore se fetch karein
-        const profileDoc = await getDoc(doc(db, 'profiles', userId));
+        const profileDoc = await getDoc(doc(db, 'profiles', userId)); // <-- Ab yeh line theek hai!
         if (!profileDoc.exists()) {
             return new Response(JSON.stringify({ error: 'Company profile not found in database.' }), { status: 404 });
         }
