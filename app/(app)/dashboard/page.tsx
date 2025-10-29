@@ -15,8 +15,11 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    // 🚨 FIX: Agar auth null hai (jo ki lib/firebase.ts mein ho sakta hai) toh kuch na karein
+    if (!auth) return; 
+
     try {
-      await signOut(auth);
+      await signOut(auth); // <--- Ab yeh line theek hai!
       router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error);
