@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // Login page par wapis link karne ke liye
+import Link from "next/link";
 import { auth } from "@/lib/firebase"; // Hamari Firebase config file
 import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase ka SIGN UP function
 
@@ -43,18 +43,20 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
+    
+    // 🚨 FINAL FIX: Check karein ke auth object mojood hai ya nahi
+    if (!auth) {
+        setError("Firebase connection failed. Please try again.");
+        setLoading(false);
+        return;
+    }
+
 
     try {
-      // -- YEH HAI ASLI FIREBASE SIGN UP LOGIC --
-      // Naya user create karo
       await createUserWithEmailAndPassword(auth, email, password);
-
-      // Successful, toh dashboard par bhej do
-      // createUserWithEmailAndPassword automatically user ko login kar deta hai
       router.push("/dashboard");
 
-    } catch (error) {
-      // Agar error aaye (e.g., email pehle se use mein hai)
+    } catch (_error) { // FIX: Renamed 'error' to '_error' to silence the ESLint warning
       setError("Failed to create account. Email may already be in use.");
       setLoading(false);
     }
