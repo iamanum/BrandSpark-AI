@@ -1,9 +1,7 @@
-// app/layout.tsx
-
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext"; // <- YAHAN IMPORT KAREIN
+import "./globals.css"; 
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider> {/* <- YAHAN WRAP KAREIN */}
+        <AuthProvider>
           {children}
-        </AuthProvider> {/* <- YAHAN WRAP KAREIN */}
+        </AuthProvider>
       </body>
     </html>
   );

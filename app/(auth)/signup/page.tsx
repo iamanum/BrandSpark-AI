@@ -1,5 +1,3 @@
-// app/(auth)/signup/page.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -44,19 +42,18 @@ export default function SignupPage() {
       return;
     }
     
-    // 🚨 FINAL FIX: Check karein ke auth object mojood hai ya nahi
+    // 🚨 VERCEL FIX: Check karein ke auth object mojood hai ya nahi
     if (!auth) {
         setError("Firebase connection failed. Please try again.");
         setLoading(false);
         return;
     }
 
-
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
 
-    } catch (_error) { // FIX: Renamed 'error' to '_error' to silence the ESLint warning
+    } catch { // FINAL UNIVERSAL FIX: Variable name mukammal tor par hata diya
       setError("Failed to create account. Email may already be in use.");
       setLoading(false);
     }

@@ -41,12 +41,14 @@ export async function POST(request: Request) {
         }
         
         // 🚨 FINAL FIX: Check karein ke DB object available hai
+        // Yeh check TypeScript ko bata deta hai ke aage 'db' null nahi hai.
         if (!db) {
-            return new Response(JSON.stringify({ error: 'Database service is unavailable.' }), { status: 503 });
+            // Agar DB null hai (build time par), toh foran error bhej dein
+            return new Response(JSON.stringify({ error: 'Database service is unavailable during build.' }), { status: 503 });
         }
 
         // 1. User ki Company Profile Firestore se fetch karein
-        const profileDoc = await getDoc(doc(db, 'profiles', userId)); // <-- Ab yeh line theek hai!
+        const profileDoc = await getDoc(doc(db, 'profiles', userId)); 
         if (!profileDoc.exists()) {
             return new Response(JSON.stringify({ error: 'Company profile not found in database.' }), { status: 404 });
         }

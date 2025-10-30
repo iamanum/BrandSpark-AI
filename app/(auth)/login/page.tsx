@@ -1,12 +1,9 @@
-// app/(auth)/signup/page.tsx
-
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { auth } from "@/lib/firebase"; // Hamari Firebase config file
-import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase ka SIGN UP function
+import { auth } from "@/lib/firebase"; 
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,14 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function SignupPage() {
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -37,27 +34,20 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      setLoading(false);
-      return;
-    }
     
-    // 🚨 FINAL FIX: Check karein ke auth object mojood hai ya nahi
+    // 🚨 VERCEL FIX: Check karein ke auth object mojood hai ya nahi
     if (!auth) {
         setError("Firebase connection failed. Please try again.");
         setLoading(false);
         return;
     }
 
-
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
 
-    } catch (error) {
-      setError("Failed to create account. Email may already be in use.");
+    } catch { // FINAL UNIVERSAL FIX: Variable name mukammal tor par hata diya
+      setError("Invalid email or password. Please try again.");
       setLoading(false);
     }
   };
@@ -67,13 +57,13 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Create an Account
+            Welcome Back!
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your details to get started with BrandSpark AI
+            Log in to your BrandSpark AI account
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignUp}>
+        <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -91,7 +81,6 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Min 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -101,16 +90,10 @@ export default function SignupPage() {
               <p className="text-sm text-red-600 text-center">{error}</p>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Account..." : "Sign Up"}
+              {loading ? "Logging in..." : "Login"}
             </Button>
-            <p className="text-sm text-center text-gray-600">
-              Already have an account?{" "}
-              <Link href="/login" className="font-medium underline">
-                Log In
-              </Link>
-            </p>
           </CardFooter>
         </form>
       </Card>
