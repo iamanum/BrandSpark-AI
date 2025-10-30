@@ -1,5 +1,3 @@
-// components/CompanyProfileForm.tsx
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -9,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // Textarea component abhi add karenge
+import { Textarea } from "@/components/ui/textarea";
 
 interface CompanyProfileFormProps {
     userId: string;
@@ -25,17 +23,22 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
     // 1. Data Fetch Karna (Jab page load ho)
     useEffect(() => {
         const fetchProfile = async () => {
-            if (!userId) return;
+            if (!userId || !db) return; // 🚨 FIX: db null check (pehle hi laga hua hai)
             setLoading(true);
-            const docRef = doc(db, "profiles", userId);
-            const docSnap = await getDoc(docRef);
+            try {
+                // Yahan db ko use karne se pehle check zaroori hai
+                const docRef = doc(db, "profiles", userId);
+                const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                setCompanyName(data.companyName || '');
-                setProduct(data.product || '');
-                setAudience(data.audience || '');
-                setIsSaved(true);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setCompanyName(data.companyName || '');
+                    setProduct(data.product || '');
+                    setAudience(data.audience || '');
+                    setIsSaved(true);
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
             }
             setLoading(false);
         };
@@ -47,14 +50,22 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        if (!db) { // 🚨 FIX: db null check (pehle hi laga hua hai)
+             console.error("Database not initialized.");
+             setLoading(false);
+             return;
+        }
+
         try {
+            // Yahan db ko use karne se pehle check zaroori hai
             const docRef = doc(db, "profiles", userId);
             await setDoc(docRef, {
                 companyName,
                 product,
                 audience,
                 updatedAt: new Date().toISOString(),
-            }, { merge: true }); // Merge: agar koi aur data ho toh woh delete na ho
+            }, { merge: true });
 
             setIsSaved(true);
         } catch (error) {
@@ -81,7 +92,8 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                             id="companyName"
                             placeholder="e.g., Star Coffee"
                             value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
+                            // 🚨 FIX: Explicit type for input
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanyName(e.target.value)}
                             required
                             disabled={loading}
                         />
@@ -90,11 +102,12 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                     {/* Product/Service */}
                     <div className="space-y-2">
                         <Label htmlFor="product">Product/Service</Label>
-                        <Textarea // Abhi is component ko install karenge
+                        <Textarea 
                             id="product"
                             placeholder="e.g., Freshly brewed coffee and artisan bakery items."
                             value={product}
-                            onChange={(e) => setProduct(e.target.value)}
+                            // 🚨 FIX: Explicit type for textarea
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProduct(e.target.value)}
                             required
                             disabled={loading}
                         />
@@ -107,7 +120,8 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                             id="audience"
                             placeholder="e.g., University students and young professionals"
                             value={audience}
-                            onChange={(e) => setAudience(e.target.value)}
+                            // 🚨 FIX: Explicit type for input
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudience(e.target.value)}
                             required
                             disabled={loading}
                         />

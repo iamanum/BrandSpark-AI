@@ -1,9 +1,6 @@
-// context/AuthContext.tsx
-
 "use client";
-
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, Auth } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { ReactNode } from "react";
 
@@ -11,33 +8,48 @@ import { ReactNode } from "react";
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  authInstance: Auth | null; 
 };
 
-// Context create karein
+// Context create karein aur usko type dein
 const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
+  user: null, 
+  loading: true, // Initial value
+  authInstance: null,
 });
 
 // Provider component banayen
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const authInstance = auth; 
+  
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  // 🚨 FINAL FIX 1: Loading state ko lazily initialize karein.
+  // Agar authInstance null hai (build time par), toh loading ko seedha false set kar dein.
+  // Agar authInstance mojood hai, toh loading ko true rakhein (listener ka intezar karein).
+  const [loading, setLoading] = useState(!!authInstance); 
+  
   useEffect(() => {
-    // Yeh function Firebase se "sunta" rehta hai
-    // Jab user login ya logout hota hai, yeh automatically trigger hota hai
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Agar auth instance hi null hai, toh hum listener set nahi kar sakte.
+    // Loading state is already set to false by useState in this case.
+    if (!authInstance) {
+      return; 
+    }
+    
+    // Agar authInstance mojood hai, toh Firebase listener shuru karein
+    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
       setUser(user);
-      setLoading(false);
+      // Loading state ko false sirf yahan set karte hain, jab Firebase se pehla response aa jaye.
+      setLoading(false); 
     });
 
     // Cleanup function
     return () => unsubscribe();
-  }, []);
+    
+  // 🚨 Dependency array sirf authInstance par depend karta hai.
+  }, [authInstance]);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, authInstance }}>
       {children}
     </AuthContext.Provider>
   );
