@@ -1,6 +1,5 @@
 // app/api/generate/route.ts - FINAL VERSION
 
-import { OpenAI } from 'openai';
 import { db } from '@/lib/firebase'; // Firestore database
 import { doc, getDoc } from 'firebase/firestore';
 
