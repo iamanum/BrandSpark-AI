@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase"; 
+import { auth } from "@/lib/firebase"; // Hamari Firebase config file
 import { signInWithEmailAndPassword } from "firebase/auth";
+import Link from "next/link"; // Login page se Signup par link karne ke liye
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,7 @@ export default function LoginPage() {
       return;
     }
     
-    // 🚨 VERCEL FIX: Check karein ke auth object mojood hai ya nahi
+    // 🚨 FINAL FIX: Agar auth null hai, toh error message dikhao
     if (!auth) {
         setError("Firebase connection failed. Please try again.");
         setLoading(false);
@@ -44,9 +45,11 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+
       router.push("/dashboard");
 
-    } catch { // FINAL UNIVERSAL FIX: Variable name mukammal tor par hata diya
+    } catch (error) {
+      // Unused variable warning se bachne ke liye variable ko ignore karein
       setError("Invalid email or password. Please try again.");
       setLoading(false);
     }
@@ -72,7 +75,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="m@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -82,7 +85,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -90,10 +93,16 @@ export default function LoginPage() {
               <p className="text-sm text-red-600 text-center">{error}</p>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
+            <p className="text-sm text-center text-gray-600">
+              Don't have an account?{" "}
+              <Link href="/signup" className="font-medium underline">
+                Sign Up
+              </Link>
+            </p>
           </CardFooter>
         </form>
       </Card>
