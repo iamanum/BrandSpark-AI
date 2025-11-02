@@ -1,76 +1,62 @@
-// app/api/generate/route.ts - FINAL VERSION
-
+import { OpenAI } from 'openai';
 import { db } from '@/lib/firebase'; // Firestore database
 import { doc, getDoc } from 'firebase/firestore';
 
-// NOTE: Humne 'openai' import ko yahan hata diya hai kyunke hum mock data use kar rahe hain.
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); // Commented out for Mock
+// OpenAI Client ko initialize karein (Key .env.local se uth jayegi)
+// NOTE: Is code ko sirf server-side (API route) par chalana zaroori hai
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Yahan woh sample data hai jo user ko nazar aayega
-const MOCK_AI_RESPONSE = (company: string, product: string, audience: string) => `
-**🎉 Post 1: Energy Boost for ${audience}!**
-
-Need a study break or a professional start? ${company} has the perfect freshly brewed coffee waiting. Fuel your focus and grab a bakery item!
-
-#${company.replace(/\s/g, '')} #StudentFuel #ProfessionalVibes
-
----
-
-**☕ Post 2: Treat Yourself Today**
-
-Exams ho ya deadlines, you deserve a delicious reward! Our artisan bakery items are baked fresh daily. Perfect pairing with your favorite ${product}.
-Tag a friend who needs this right now!
-
-#ArtisanBake #CoffeeTime #SweetEscape
-
----
-
-**🔥 Post 3: Location, Location, Location!**
-
-Right near campus/office, we're your go-to spot. Fast WiFi, great music, and the best service. Skip the line, grab your ${product} and get going! This content is specially tailored for ${audience}.
-
-#LocalCoffeeShop #UniLife #WorkHardPlayHard
-`;
-
-
+// POST request ko handle karein
 export async function POST(request: Request) {
-    // 🚨 FINAL FIX: Db check for API route
-    if (!db) {
-        return new Response(JSON.stringify({ 
-            error: 'Database service is unavailable during build. Please check Vercel environment variables.' 
-        }), { status: 500 });
-    }
-
     try {
         const { userId, contentType } = await request.json();
 
+        // Security and validation checks
         if (!userId || !contentType) {
-            return new Response(JSON.stringify({ error: 'Missing user or content type' }), { status: 400 });
+            return new Response(JSON.stringify({ error: 'Missing user ID or content type.' }), { status: 400 });
         }
-
+        
+        // Final DB Null Check
+        if (!db) {
+            return new Response(JSON.stringify({ error: 'Database service is unavailable during build. Please check Vercel environment variables.' }), { status: 500 });
+        }
+        
         // 1. User ki Company Profile Firestore se fetch karein
-        // NOTE: db! use nahi kiya kyunke humne shuru mein if (!db) check laga diya hai
-        const profileDoc = await getDoc(doc(db, 'profiles', userId)); 
+        const profileDoc = await getDoc(doc(db, 'profiles', userId));
         if (!profileDoc.exists()) {
-            return new Response(JSON.stringify({ error: 'Company profile not found in database.' }), { status: 404 });
+            return new Response(JSON.stringify({ error: 'Company profile not found in database. Please save your profile first.' }), { status: 404 });
         }
         const profile = profileDoc.data();
 
-        // 2. Mock Prompt Engineering (The Smart Prompt)
-        const mockContent = MOCK_AI_RESPONSE(
-            profile.companyName, 
-            profile.product, 
-            profile.audience
-        );
+        // 2. Prompt Engineering (The Smart Prompt)
+        const smartPrompt = `
+            You are an expert marketing copywriter for small businesses. Your task is to generate ${contentType} content.
+            The company name is "${profile.companyName}".
+            They sell the following product/service: "${profile.product}".
+            Their target audience is: "${profile.audience}".
+            
+            Based on this profile, generate 3 unique, engaging, and ready-to-use marketing posts.
+            
+            Tone: Fun, energetic, and professional.
+            Output Format: For each post, provide a compelling caption followed by 3 relevant, popular hashtags. Number the posts clearly (1., 2., 3.).
+        `;
 
-        // Chota sa delay (5 seconds) taake asli AI ki feeling aaye
-        await new Promise(resolve => setTimeout(resolve, 5000)); 
+        // 3. OpenAI ko call karein
+        const response = await openai.chat.completions.create({
+            model: 'gpt-3.5-turbo', // Cost-effective model for copywriting
+            messages: [{ role: 'user', content: smartPrompt }],
+            n: 1,
+            max_tokens: 400,
+            temperature: 0.7, // Creativity level
+        });
 
+        // 4. Result ko Frontend ko wapis bhej dein
+        const content = response.choices[0].message.content;
+        return new Response(JSON.stringify({ content }), { status: 200 });
 
-        // 3. Result ko Frontend ko wapis bhej dein
-        return new Response(JSON.stringify({ content: mockContent }), { status: 200 });
     } catch (error) {
-        console.error('MOCK API Error:', error);
-        return new Response(JSON.stringify({ error: 'AI generation failed due to an internal error. Check Firestore rules.' }), { status: 500 });
+        console.error('API Error:', error);
+        // Ensure the response is always JSON, even on failure
+        return new Response(JSON.stringify({ error: 'AI generation failed due to an external service error (check OpenAI billing).' }), { status: 500 });
     }
 }

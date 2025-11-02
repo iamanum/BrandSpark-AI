@@ -48,6 +48,7 @@ export default function LoginPage() {
 
       router.push("/dashboard");
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // Unused variable warning se bachne ke liye variable ko ignore karein
       setError("Invalid email or password. Please try again.");
@@ -98,7 +99,7 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Login"}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/signup" className="font-medium underline">
                 Sign Up
               </Link>
