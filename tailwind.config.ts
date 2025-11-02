@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: ["class"], // <-- Dark Mode (next-themes) ke liye zaroori
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 👇 These map Tailwind color utilities to your CSS variables
+        // 👇 Yeh saari colors aapke globals.css se link hain
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: "hsl(var(--card))",
@@ -36,6 +36,7 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // 🎨 15+ YR EXPERT UI/UX ANIMATIONS/SHADOWS
       boxShadow: {
         saas: "0 4px 8px rgba(0, 0, 0, 0.02), 0 12px 32px rgba(0, 0, 0, 0.05)",
       },
@@ -44,14 +45,9 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        scaleUp: {
-          "0%": { opacity: "0", transform: "scale(0.97)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
-        },
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out forwards",
-        "scale-up": "scaleUp 0.4s ease-out forwards",
       },
     },
   },
