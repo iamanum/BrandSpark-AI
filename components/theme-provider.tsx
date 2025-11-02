@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-// Use React.ComponentProps to infer the props instead of importing ThemeProviderProps
+// Use inferred props instead of ThemeProviderProps
 export function ThemeProvider({
   children,
   ...props
