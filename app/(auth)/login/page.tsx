@@ -1,10 +1,12 @@
+// app/(auth)/login/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // Login page se Signup ka link
 import { auth } from "@/lib/firebase"; // Hamari Firebase config file
-import { signInWithEmailAndPassword } from "firebase/auth";
-import Link from "next/link"; // Login page se Signup par link karne ke liye
+import { signInWithEmailAndPassword } from "firebase/auth"; // Firebase ka login function
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +38,8 @@ export default function LoginPage() {
       return;
     }
     
-    // 🚨 FINAL FIX: Agar auth null hai, toh error message dikhao
+    // 🚨 FINAL FIX: Check karein ke auth object mojood hai ya nahi
+    // Vercel build time par auth null ho sakta hai.
     if (!auth) {
         setError("Firebase connection failed. Please try again.");
         setLoading(false);
@@ -44,13 +47,13 @@ export default function LoginPage() {
     }
 
     try {
+      // TypeScript ko pata hai ke auth is waqt null nahi hai
       await signInWithEmailAndPassword(auth, email, password);
 
       router.push("/dashboard");
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      // Unused variable warning se bachne ke liye variable ko ignore karein
+    } catch (error) { 
+      // Agar Firebase error (like wrong password) de
       setError("Invalid email or password. Please try again.");
       setLoading(false);
     }
@@ -76,6 +79,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="m@example.com"
                 value={email}
+                // FIX: Explicit type for input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 disabled={loading}
               />
@@ -86,6 +90,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={password}
+                // FIX: Explicit type for input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 disabled={loading}
               />
@@ -94,16 +99,10 @@ export default function LoginPage() {
               <p className="text-sm text-red-600 text-center">{error}</p>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
-            <p className="text-sm text-center text-gray-600">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-medium underline">
-                Sign Up
-              </Link>
-            </p>
           </CardFooter>
         </form>
       </Card>

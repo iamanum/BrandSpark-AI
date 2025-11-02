@@ -1,10 +1,12 @@
+// app/(auth)/signup/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { auth } from "@/lib/firebase"; // Hamari Firebase config file
-import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase ka SIGN UP function
+import Link from "next/link"; // For linking back to the login page
+import { auth } from "@/lib/firebase"; // Our Firebase config file
+import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase's SIGN UP function
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,18 +44,23 @@ export default function SignupPage() {
       return;
     }
     
-    // 🚨 VERCEL FIX: Check karein ke auth object mojood hai ya nahi
+    // 🚨 CRITICAL FIX: Check if auth object is available
+    // This prevents Vercel/TypeScript compile failure
     if (!auth) {
-        setError("Firebase connection failed. Please try again.");
+        setError("Firebase connection failed during initialization. Please try again.");
         setLoading(false);
         return;
     }
 
     try {
+      // Create new user in Firebase
       await createUserWithEmailAndPassword(auth, email, password);
+
+      // Successful, redirect to the dashboard
       router.push("/dashboard");
 
-    } catch { // FINAL UNIVERSAL FIX: Variable name mukammal tor par hata diya
+    } catch (error) { 
+      // Handle Firebase-specific errors (e.g., email already in use)
       setError("Failed to create account. Email may already be in use.");
       setLoading(false);
     }
@@ -79,7 +86,7 @@ export default function SignupPage() {
                 type="email"
                 placeholder="m@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -90,7 +97,7 @@ export default function SignupPage() {
                 type="password"
                 placeholder="Min 6 characters"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 disabled={loading}
               />
             </div>
