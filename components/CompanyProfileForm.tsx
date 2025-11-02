@@ -23,11 +23,13 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
     // 1. Data Fetch Karna (Jab page load ho)
     useEffect(() => {
         const fetchProfile = async () => {
-            if (!userId || !db) return; // 🚨 FIX: db null check (pehle hi laga hua hai)
+            // Firestore call se pehle db check zaroori hai
+            if (!userId || !db) return; 
+            
             setLoading(true);
             try {
-                // Yahan db ko use karne se pehle check zaroori hai
-                const docRef = doc(db, "profiles", userId);
+                // db! ka matlab hai TypeScript ko force karna ke db null nahi hai
+                const docRef = doc(db!, "profiles", userId);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -51,15 +53,15 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
         e.preventDefault();
         setLoading(true);
 
-        if (!db) { // 🚨 FIX: db null check (pehle hi laga hua hai)
+        if (!db) { // Zaroori check
              console.error("Database not initialized.");
              setLoading(false);
              return;
         }
 
         try {
-            // Yahan db ko use karne se pehle check zaroori hai
-            const docRef = doc(db, "profiles", userId);
+            // db! ka matlab hai TypeScript ko force karna ke db null nahi hai
+            const docRef = doc(db!, "profiles", userId);
             await setDoc(docRef, {
                 companyName,
                 product,
@@ -79,7 +81,7 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
     }
 
     return (
-        <Card className="mt-8">
+        <Card className="mt-8 shadow-xl"> {/* UI/UX Improvement: Added shadow-xl */}
             <CardHeader>
                 <CardTitle className="text-xl">Your Business Profile</CardTitle>
             </CardHeader>
@@ -90,9 +92,9 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                         <Label htmlFor="companyName">Company Name</Label>
                         <Input
                             id="companyName"
+                            type="text"
                             placeholder="e.g., Star Coffee"
                             value={companyName}
-                            // 🚨 FIX: Explicit type for input
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanyName(e.target.value)}
                             required
                             disabled={loading}
@@ -106,7 +108,6 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                             id="product"
                             placeholder="e.g., Freshly brewed coffee and artisan bakery items."
                             value={product}
-                            // 🚨 FIX: Explicit type for textarea
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProduct(e.target.value)}
                             required
                             disabled={loading}
@@ -118,9 +119,9 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                         <Label htmlFor="audience">Target Audience</Label>
                         <Input
                             id="audience"
+                            type="text"
                             placeholder="e.g., University students and young professionals"
                             value={audience}
-                            // 🚨 FIX: Explicit type for input
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudience(e.target.value)}
                             required
                             disabled={loading}
@@ -132,7 +133,7 @@ export default function CompanyProfileForm({ userId }: CompanyProfileFormProps) 
                     </Button>
                     
                     {isSaved && (
-                        <p className="text-sm text-center text-green-600">
+                        <p className="text-sm text-center text-green-600 mt-2">
                             ✅ Profile saved successfully!
                         </p>
                     )}

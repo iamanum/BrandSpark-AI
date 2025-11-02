@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-"build": "next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "npx vercel --prod --force"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",

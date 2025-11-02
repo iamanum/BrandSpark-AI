@@ -1,12 +1,10 @@
-// app/(auth)/signup/page.tsx
-
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // For linking back to the login page
-import { auth } from "@/lib/firebase"; // Our Firebase config file
-import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase's SIGN UP function
+import Link from "next/link"; // Login page par link karne ke liye
+import { auth } from "@/lib/firebase"; // Hamari Firebase config file
+import { createUserWithEmailAndPassword } from "firebase/auth"; // Firebase ka SIGN UP function
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,47 +42,47 @@ export default function SignupPage() {
       return;
     }
     
-    // 🚨 CRITICAL FIX: Check if auth object is available
-    // This prevents Vercel/TypeScript compile failure
+    // 🚨 FINAL FIX: Check karein ke auth object mojood hai ya nahi
     if (!auth) {
-        setError("Firebase connection failed during initialization. Please try again.");
+        setError("Firebase connection failed. Please try again. (Check Vercel envs)");
         setLoading(false);
         return;
     }
 
-    try {
-      // Create new user in Firebase
-      await createUserWithEmailAndPassword(auth, email, password);
 
-      // Successful, redirect to the dashboard
+    try {
+      // -- YEH HAI ASLI FIREBASE SIGN UP LOGIC --
+      await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Successful, toh dashboard par bhej do
       router.push("/dashboard");
 
     } catch (error) { 
-      // Handle Firebase-specific errors (e.g., email already in use)
+      // Agar error aaye (e.g., email pehle se use mein hai)
       setError("Failed to create account. Email may already be in use.");
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Create an Account
+          <CardTitle className="text-3xl font-extrabold text-center text-primary-foreground">
+            Create Your Account
           </CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to get started with BrandSpark AI
+          <CardDescription className="text-center text-muted-foreground">
+            Start using **BrandSpark AI**
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 disabled={loading}
@@ -102,16 +100,16 @@ export default function SignupPage() {
               />
             </div>
             {error && (
-              <p className="text-sm text-red-600 text-center">{error}</p>
+              <p className="text-sm text-destructive text-center p-2 border border-destructive rounded-md bg-destructive/10">{error}</p>
             )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-10 font-bold" disabled={loading}>
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
-            <p className="text-sm text-center text-gray-600">
+            <p className="text-sm text-center text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="font-medium underline">
+              <Link href="/login" className="font-medium underline text-primary hover:text-primary/80">
                 Log In
               </Link>
             </p>
