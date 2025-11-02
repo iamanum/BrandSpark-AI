@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase"; // Yeh Auth | null import karega
+import { auth } from "@/lib/firebase";
 import { ReactNode } from "react";
 
 type AuthContextType = {
@@ -10,7 +10,6 @@ type AuthContextType = {
   loading: boolean;
 };
 
-// 1. Context ko type zaroor dein
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
@@ -18,30 +17,31 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // Default loading TRUE hai
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false); // ✅ Prevent updates before mount
 
   useEffect(() => {
-    const authInstance = auth; // Instance lein
+    setMounted(true); // ✅ Mark mounted when component is ready
 
-    if (authInstance) {
-      // 2. Agar Firebase load ho gaya hai, toh ASYNC listener lagayen
-      const unsubscribe = onAuthStateChanged(authInstance, (user) => {
-        setUser(user);
-        setLoading(false); // Yeh ASYNC hai (Theek hai)
-      });
-      
-      return () => unsubscribe();
-
-    } else {
-      // 3. 🚨 15-YEAR EXPERT FIX:
-      // Agar Firebase load nahi hua (Build time/Error)
-      // Hum state ko synchronously update nahi karenge.
-      // Hum isay microtask (Promise) mein daal denge taake React render cycle crash na ho.
-      Promise.resolve().then(() => {
-        setLoading(false);
-      });
+    if (!auth) {
+      setLoading(false);
+      return;
     }
-  }, []); // Dependency array khaali rakhein taake yeh sirf ek baar chale
+
+    // ✅ Safe Firebase listener
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (mounted) {
+        setUser(firebaseUser);
+        setLoading(false);
+      }
+    });
+
+    // ✅ Cleanup properly when unmounted
+    return () => {
+      setMounted(false);
+      unsubscribe();
+    };
+  }, [mounted]);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
@@ -51,4 +51,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

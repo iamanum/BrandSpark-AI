@@ -1,118 +1,236 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
+// 🎨 15+ YR EXPERT IMPORTS:
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+// 🎨 NAYE ICONS ADD KIYE HAIN
+import { 
+  Sun, Moon, Sparkles, LogOut, LayoutGrid, Wand2, Settings, 
+  BarChart3, Users2, Plug 
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+
+// 🔥 CORE FUNCTIONALITY IMPORTS:
 import CompanyProfileForm from "@/components/CompanyProfileForm";
 import ContentGenerator from "@/components/ContentGenerator";
-import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
+
+// 🎨 NAVIGATION ITEMS UPDATE KIYE HAIN
+const navItems = [
+  { name: "Overview", icon: LayoutGrid },
+  { name: "AI Generator", icon: Wand2 },
+  { name: "Analytics", icon: BarChart3 },
+  { name: "Team", icon: Users2 },
+  { name: "Integrations", icon: Plug },
+  { name: "Settings", icon: Settings },
+];
+
+// 🎨 15+ YR EXPERT FIX: Ek reusable placeholder page banaya
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <motion.div key={title} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{title}</h2>
+    <Card className="bg-white/70 dark:bg-black/5 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-saas animate-fade-in">
+      <CardContent className="p-10 text-center">
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Feature Coming Soon!
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+          This ({title}) feature is currently under development. This demonstrates 
+          the full navigation structure of the planned SaaS application.
+        </p>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
+
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { user, loading } = useAuth(); 
   const router = useRouter();
-
-  useEffect(() => {
-    document.title = "Dashboard | BrandSpark AI";
-  }, []);
+  const [selectedPage, setSelectedPage] = useState("Overview"); 
 
   const handleLogout = async () => {
-    if (!auth) {
-      console.error("Auth service not initialized.");
-      return;
-    }
-    try {
-      await signOut(auth);
-      router.push("/login");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
+    if (!auth) return; 
+    await signOut(auth);
+    router.push("/login");
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-        <p className="text-xl font-medium text-muted-foreground animate-pulse">
-          Checking login status...
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
 
-  if (!user) {
+  if (loading || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-        <h1 className="text-2xl font-semibold text-primary mb-4">
-          You are not logged in
-        </h1>
-        <a
-          href="/login"
-          className="text-white bg-primary hover:bg-primary/90 px-5 py-2.5 rounded-lg shadow-md transition-all"
-        >
-          Go to Login
-        </a>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary">
+        <p className="text-xl font-medium text-muted-foreground">Checking login status...</p> 
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 p-6 sm:p-10">
-      {/* Dashboard Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-10 gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary transition-all duration-700">
+      
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 h-full w-64 border-r border-gray-200 dark:border-white/10 bg-white/70 dark:bg-black/5 backdrop-blur-xl p-6 flex flex-col justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-            ✨ BrandSpark AI Dashboard
-          </h1>
-          <p className="mt-2 text-muted-foreground text-base">
-            Welcome back, <span className="font-semibold text-foreground">{user.email}</span>
-          </p>
+          <motion.h1
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-2xl font-bold text-gray-900 dark:text-white mb-8 tracking-tight"
+          >
+            BrandSpark <span className="text-primary dark:text-primary-foreground/80">AI</span>
+          </motion.h1>
+
+          <nav className="space-y-3">
+            {navItems.map(
+              (item) => (
+                <motion.button
+                  whileHover={{ scale: 1.05, x: 4 }}
+                  key={item.name}
+                  onClick={() => setSelectedPage(item.name)} 
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3
+                    ${selectedPage === item.name 
+                      ? "bg-primary/90 text-primary-foreground" 
+                      : "text-gray-700 dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-white/10"
+                    } 
+                    font-medium transition-all`}
+                >
+                  <item.icon size={18} />
+                  <span>{item.name}</span>
+                </motion.button>
+              )
+            )}
+          </nav>
         </div>
 
-        <Button
-          variant="destructive"
-          onClick={handleLogout}
-          className="shadow-md hover:scale-105 transition-transform"
-        >
-          Logout
-        </Button>
-      </div>
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-gray-200 dark:hover:bg-white/10"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={handleLogout}
+            className="rounded-full hover:scale-105 transition-transform"
+          >
+            <LogOut size={18} />
+          </Button>
+        </div>
+      </aside>
 
-      {/* Dashboard Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 25 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-10"
-      >
-        {/* Company Profile */}
-        <Card className="shadow-md hover:shadow-xl transition-all">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-primary">
-              🏢 Company Profile
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Fill in your company details to help the AI generate personalized marketing content.
-            </p>
+      {/* Main Dashboard Content */}
+      <main className="ml-64 p-10">
+        
+        {/* ==== OVERVIEW PAGE ==== */}
+        {selectedPage === "Overview" && (
+          <>
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl relative overflow-hidden p-8 bg-gradient-to-r from-primary/10 via-blue-600/5 to-purple-600/5 dark:from-primary/10 dark:via-indigo-500/10 dark:to-purple-600/10 border border-gray-200 dark:border-white/10 backdrop-blur-md shadow-saas animate-fade-in"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                    Welcome back,{" "}
+                    <span className="text-primary dark:text-primary-foreground/80">
+                      {user?.email?.split("@")[0]}
+                    </span>
+                    👋
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg max-w-lg">
+                    Create, analyze, and manage your AI marketing content—all in one
+                    stunning dashboard.
+                  </p>
+                </div>
+                <motion.div
+                  whileHover={{ rotate: 8, scale: 1.1 }}
+                  className="mt-6 md:mt-0"
+                >
+                  <Sparkles className="text-primary dark:text-primary-foreground/80 w-16 h-16" />
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* 🎨 CARDS AB CLICKABLE HAIN */}
+            <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                { title: "Analytics Insight", desc: "Track engagement, growth and keyword trends.", pageName: "Analytics" },
+                { title: "Team Collaboration", desc: "Share your AI workspace with your team.", pageName: "Team" },
+                { title: "Integrations", desc: "Connect Facebook, LinkedIn, and Google Ads.", pageName: "Integrations" },
+              ].map((card, i) => (
+                <motion.button
+                  key={i}
+                  onClick={() => setSelectedPage(card.pageName)} // <-- CLICK LOGIC
+                  whileHover={{ scale: 1.04, translateY: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="animate-fade-in text-left"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <Card className="bg-white/70 dark:bg-black/5 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-saas hover:shadow-xl transition-all h-full">
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        {card.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {card.desc}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ==== AI GENERATOR PAGE ==== */}
+        {selectedPage === "AI Generator" && (
+          <motion.div 
+            key="ai-generator"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+          >
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">AI Generator</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">First, update your company profile. Then, generate content below.</p>
             <CompanyProfileForm userId={user.uid} />
-          </CardContent>
-        </Card>
-
-        {/* Content Generator */}
-        <Card className="shadow-md hover:shadow-xl transition-all">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-primary">
-              🤖 AI Content Generator
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Instantly generate creative posts, taglines, and campaign ideas for your brand.
-            </p>
             <ContentGenerator userId={user.uid} />
-          </CardContent>
-        </Card>
-      </motion.div>
+          </motion.div>
+        )}
+
+        {/* ==== SETTINGS PAGE ==== */}
+        {selectedPage === "Settings" && (
+          <motion.div 
+            key="settings"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+          >
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Settings</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Manage your company profile and billing information.</p>
+            <CompanyProfileForm userId={user.uid} />
+          </motion.div>
+        )}
+        
+        {/* 🎨 YAHAN NAYE PLACEHOLDER PAGES HAIN */}
+        {selectedPage === "Analytics" && <PlaceholderPage title="Analytics" />}
+        {selectedPage === "Team" && <PlaceholderPage title="Team Collaboration" />}
+        {selectedPage === "Integrations" && <PlaceholderPage title="Integrations" />}
+
+      </main>
     </div>
   );
 }
+
